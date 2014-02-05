@@ -1,0 +1,197 @@
+#!/bin/bash
+#    This file is part of init-tmux.
+#
+#    init-tmux is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    init-tmux is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with init-tmux.  If not, see <http://www.gnu.org/licenses/>.
+
+function usage
+{
+    echo "Usage:"
+    echo "$0 : attach | start | stop | status"
+    echo ""
+    echo "attach: Prompt the user to attach to a Tmux session that this script manages"
+    echo "start : Start the Tmux sessions that this script manages"
+    echo "stop : Stop the Tmux sessions that this script manages"
+    echo "status: Show the status of the Tmux sessions that this script manages"
+    echo ""
+    exit 1
+}
+
+# Change directory to the directory containing this script
+INIT_TMUX_ROOT="$(cd "${BASH_SOURCE[0]%/*}" && pwd)"
+cd "${INIT_TMUX_ROOT}"
+
+source utils.sh
+INIT_TMUX_SESSION_DIR="${INIT_TMUX_ROOT}/${TMUX_D}"
+
+
+if [ ! -e "${INIT_TMUX_SESSION_DIR}" ]; then
+    message error "${INIT_TMUX_SESSION_DIR} does not exist"
+    exit 1
+fi
+
+cd "${INIT_TMUX_SESSION_DIR}"
+declare -a SESSIONS
+getSessionNames
+
+# Check we are not inside a tmux session
+if [ ! -z "${TMUX}"  ]; then
+    message error "Warning you are running inside Tmux"
+    exit 1
+fi
+
+# Parse arguments
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+case $1 in
+
+    start)
+        #Build sessions
+        for session in ${SESSIONS[*]} ;do
+            message nnl "Starting Tmux session ${session}: "
+            initFile="${INIT_TMUX_SESSION_DIR}/${session}.${SESSION_SFX}"
+
+            if [ ! -e "${initFile}" ]; then
+                message error "Session initialisation file ${initFile} does not exist. Skipping."
+                continue
+            fi
+
+            # Check Session's shell initialisation file exists
+            shellInitFile="${INIT_TMUX_SESSION_DIR}/${session}.${SHELL_SFX}"
+            if [ ! -e "${shellInitFile}" ]; then
+                message error "Session's shell environment initialisation file ${shellInitFile} does not exist. Skipping."
+                continue
+            fi
+
+            # Check if session is already active
+            if [ $( tmux list-sessions 2> /dev/null | awk '{print $1}' | grep -c "${session}:") -ne 0 ]; then
+              message error "Already active. Skipping."
+              continue;
+            fi
+
+            # Start new tmux session forcing commands that create
+            # new windows to run a custom command so that the
+            # environment will be initialised in every shell
+            CMD="bash --init-file ${INIT_TMUX_ROOT}/bashrc"
+            tmux new-session -d -s "${session}" "${CMD}" \; set-option -sq default-command "${CMD}"
+
+            ( export INIT_TMUX_SESSION="${session}" ;\
+              source "${initFile}" && \
+              message ok "done (using ${initFile})"
+            ) # Run in subshell to isolate from this shell
+        done
+
+        echo ""
+        message ok "The following Tmux sessions are now active:"
+        tmux list-sessions
+    ;;
+    stop)
+        for session in ${SESSIONS[*]} ;do
+            message nnl "Stopping Tmux session ${session}: "
+            if [ $( tmux list-sessions 2> /dev/null | awk '{print $1}' | grep -c "${session}:") -ne 0 ]; then
+                # kill session
+                tmux kill-session -t "${session}" && message ok "done"
+            else
+                message error "Session not active. Skipping."
+            fi
+        done
+
+    ;;
+    status)
+        ACTIVE_SESSIONS=$(tmux list-sessions 2> /dev/null)
+        if [ -z "${ACTIVE_SESSIONS}" ]; then
+            message error "No init-tmux sessions found"
+            exit 1
+        else
+            IFS=$'\n'
+            declare -A FOUND
+            # Look for matching sessions
+            for session in ${ACTIVE_SESSIONS}; do
+                for our_session in ${SESSIONS[*]}; do
+                    if [ "$( echo "${session}" | awk '{print $1}')" = "${our_session}:" ]; then
+                        FOUND["${our_session}"]=1
+                        message ok "${session}"
+                        break;
+                    fi
+                done
+            done
+
+            # Report sessions that are not active
+            for our_session in ${SESSIONS[*]} ; do
+                COUNT=0
+                for active_session in ${!FOUND[*]} ; do
+                    if [ "${active_session}" = "${our_session}" ]; then
+                        COUNT=1
+                        break
+                    fi
+                done
+
+                if [ ${COUNT} -ne 1 ]; then
+                    message error "Session ${our_session} is not active"
+                fi
+            done
+        fi
+    ;;
+    attach)
+        ACTIVE_SESSIONS=$(tmux list-sessions 2> /dev/null)
+        if [ -z "${ACTIVE_SESSIONS}" ]; then
+            message error "No init-tmux sessions found"
+            exit 1
+        else
+            IFS=$'\n'
+            declare -a FOUND
+            COUNTER=0
+            # Look for matching sessions
+            for session in ${ACTIVE_SESSIONS}; do
+                for our_session in ${SESSIONS[*]}; do
+                    if [ "$( echo "${session}" | awk '{print $1}')" = "${our_session}:" ]; then
+                        FOUND[${COUNTER}]=${our_session}
+                        message ok "[${COUNTER}] : ${session}"
+                        COUNTER=$((++COUNTER))
+                        break;
+                    fi
+                done
+            done
+
+            if [ ${COUNTER} -eq 0 ]; then 
+                message error "No init-tmux sessions found"
+            fi
+
+            # Prompt the user to select session
+            read -p "Pick a session number (q to quit):" SESSION_NUMBER
+
+            if [ "${SESSION_NUMBER}" = "q" ]; then
+                exit 0;
+            fi
+
+            if [ $(echo "${SESSION_NUMBER}" | grep -E --count '[0-9]+') -ne 1 ]; then
+                message error "Invalid choice: Not a number"
+                exit 1
+            fi
+
+            if [ "${SESSION_NUMBER}" -ge "${COUNTER}" ]; then
+                message error "Invalid choice: Number not in range"
+                exit 1
+            fi
+
+            # Session number is valid
+            tmux attach-session -t ${FOUND[${SESSION_NUMBER}]}
+        fi
+
+    ;;
+    *)
+      message error "Invalid mode '${1}'. Run with no arguments to see correct usage."
+      exit 1
+esac
