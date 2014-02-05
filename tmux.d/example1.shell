@@ -1,5 +1,0 @@
-# This script is sourced when creating shells for
-# the session
-echo "Hello World example1!"
-
-# You could add paths to PATHS to have extra tools in your path

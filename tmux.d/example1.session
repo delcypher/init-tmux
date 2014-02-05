@@ -1,6 +1,0 @@
-# Commands in this file are executed when the session is initialised by shell
-# running the init-tmux command. A variable ${INIT_TMUX_SESSION} is passed to
-# the environment which contains the name of the session being initialised.
-
-tmux new-window -n "home" -c ~ -t "${INIT_TMUX_SESSION}"
-tmux new-window -n "root" -c / -t "${INIT_TMUX_SESSION}"

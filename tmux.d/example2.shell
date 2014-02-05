@@ -1,3 +1,0 @@
-# This script is sourced when creating shells for
-# the session
-echo "Hello World example2!"

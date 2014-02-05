@@ -1,0 +1,3 @@
+tmux new-window -n "tool-root" -c "~/dev/gpuverify/autobuild/linux" -t "${INIT_TMUX_SESSION}"
+tmux new-window -n "gpuverify" -c "~/dev/gpuverify/autobuild/linux/gpuverify" -t "${INIT_TMUX_SESSION}"
+tmux kill-window -t "${INIT_TMUX_SESSION}:0" # Kill default window

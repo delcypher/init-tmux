@@ -1,0 +1,4 @@
+PS1='[\u@\h[GV] \W$(__git_ps1 " (%s)")]\$ '
+
+PATH=~/dev/gpuverify/autobuild/linux/gpuverify:$PATH
+PATH=~/dev/gpuverify/autobuild/linux/llvm_and_clang/build/bin:$PATH
