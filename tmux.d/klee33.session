@@ -1,3 +1,3 @@
-tmux new-window -n "ksrc" -c "~/dev/klee/klee/src" -t "${INIT_TMUX_SESSION}"
-tmux new-window -n "kbin" -c "~/dev/klee/klee/bin-dbg-llvm33" -t "${INIT_TMUX_SESSION}"
+tmux new-window -n "ksrc" -c ~/dev/klee/klee/src -t "${INIT_TMUX_SESSION}"
+tmux new-window -n "kbin" -c ~/dev/klee/klee/bin-dbg-llvm33 -t "${INIT_TMUX_SESSION}"
 tmux kill-window -t "${INIT_TMUX_SESSION}:0" # Kill default window
