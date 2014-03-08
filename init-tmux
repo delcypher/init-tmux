@@ -187,7 +187,7 @@ case $1 in
             fi
 
             # Session number is valid
-            tmux attach-session -t ${FOUND[${SESSION_NUMBER}]}
+            tmux attach-session -d -t ${FOUND[${SESSION_NUMBER}]}
         fi
 
     ;;
