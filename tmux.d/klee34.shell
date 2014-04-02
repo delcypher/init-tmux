@@ -1,0 +1,4 @@
+PS1='[\u@\h[K] \W$(__git_ps1 " (%s)")]\$ '
+
+PATH=~/dev/klee/klee/bin-dbg-llvm34/Debug+Asserts/bin:$PATH
+PATH=~/dev/klee/llvm-3.4/bin/Debug+Asserts/bin:$PATH
