@@ -1,4 +1,4 @@
 tmux new-window -n "sroot" -c ~/dev/symbooglix/ -t "${INIT_TMUX_SESSION}"
 tmux new-window -n "ssrc" -c ~/dev/symbooglix/symbooglix/ -t "${INIT_TMUX_SESSION}"
-tmux new-window -n "boogielib" -c ~/dev/symbooglix/symbooglix/boogie -t "${INIT_TMUX_SESSION}"
+tmux new-window -n "boogielib" -c ~/dev/symbooglix/symbooglix/ExternalLibs/Boogie -t "${INIT_TMUX_SESSION}"
 tmux kill-window -t "${INIT_TMUX_SESSION}:0" # Kill default window
