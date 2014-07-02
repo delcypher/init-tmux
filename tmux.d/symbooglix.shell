@@ -1,5 +1,6 @@
 PS1='[\u@\h[SB] \W$(__git_ps1 " (%s)")]\$ '
 
 # Boogie
-PATH=~/dev/symbooglix/symbooglix/boogie/Binaries:$PATH
+PATH=~/dev/symbooglix/symbooglix/ExternalLibs/Boogie/Binaries/:$PATH
+
 PATH=~/dev/symbooglix/symbooglix/symbooglix/symbooglix/bin/Debug:$PATH
