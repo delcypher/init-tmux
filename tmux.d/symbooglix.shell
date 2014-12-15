@@ -7,4 +7,4 @@ PATH=~/dev/symbooglix/symbooglix/ExternalLibs/Boogie/Binaries/:$PATH
 PATH=/home/dsl11/dev/gpuverify/autobuild/linux/gpuverify:$PATH
 
 # Symbooglix
-PATH=/home/dsl11/dev/symbooglix/symbooglix/src/Symbooglix/bin/Release:$PATH
+PATH=/home/dsl11/dev/symbooglix/symbooglix/src/SymbooglixDriver/bin/Release:$PATH
